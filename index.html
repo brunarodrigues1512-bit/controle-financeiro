@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle Financeiro Pessoal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E📊%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f2f2f2;--card:#fff;--tx:#111;--mu:#6b6b6b;--bd:#dcdcdc;--ac:#222;--ok:#111;--ko:#6b6b6b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--card:#1c1c1c;--tx:#eee;--mu:#9a9a9a;--bd:#333;--ac:#e5e5e5;--ok:#f2f2f2;--ko:#9a9a9a}}
+--bg:#121212;--card:#1c1c1c;--tx:#eee;--mu:#9a9a9a;--bd:#333;--ac:#e5e5e5;--ok:#f2f2f2;--ko:#9a9a9a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:920px;margin:0 auto;padding:16px}
+h1{font-size:1.3rem;margin:0;color:var(--ac)}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:12px}
+.k{color:var(--mu);font-size:.8rem}.v{font-size:1.5rem;font-weight:700}
+.in{color:var(--ok)}.out{color:var(--ko)}
+form{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:end}
+label{display:flex;flex-direction:column;font-size:.75rem;color:var(--mu);gap:3px}
+input,select,button{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);width:100%}
+button{background:var(--ac);color:var(--card);border:0;cursor:pointer;font-weight:600}
+button.g{background:transparent;color:var(--mu);border:1px solid var(--bd);width:auto}
+.two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:12px}
+.bar{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.85rem}
+.bar .n{width:96px;flex:none}.bar .t{flex:1;background:var(--bg);border-radius:6px;height:12px;overflow:hidden}
+.bar .f{height:100%;background:linear-gradient(90deg,#9a9a9a,var(--ac))}.bar .m{width:90px;text-align:right;flex:none}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.88rem}
+td,th{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mu);font-weight:500}
+.x{background:none;border:0;color:var(--mu);width:auto;padding:2px 6px;cursor:pointer}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}.ov[hidden]{display:none}.md{width:100%;max-width:420px;max-height:88vh;overflow:auto}.md .hd{display:flex;justify-content:space-between;align-items:center}
+.meta{display:flex;gap:8px;align-items:center}.meta input{width:150px}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>📊 Meu Controle Financeiro</h1>
+  <div class="meta"><input type="month" id="mes"><button class="g" id="exp" title="Baixar backup dos dados">⬇️ Backup</button><button class="g" id="imp" title="Restaurar backup">⬆️ Restaurar</button><input type="file" id="fi" accept=".json,application/json" hidden><button class="g" id="cofre" aria-label="Cofrinho" title="Cofrinho" style="font-size:1.2rem">🐷</button></div>
+</header>
+
+<div class="grid">
+  <div class="card"><div class="k">Receitas</div><div class="v in" id="rec">R$ 0,00</div></div>
+  <div class="card"><div class="k">Despesas</div><div class="v out" id="des">R$ 0,00</div></div>
+  <div class="card"><div class="k">Saldo do mês</div><div class="v" id="sal">R$ 0,00</div></div>
+  <div class="card"><div class="k">Meta de gastos <input type="number" id="meta" min="0" step="50" placeholder="R$ limite" style="margin-top:4px"></div><div class="k" id="metaTxt" style="margin-top:6px"></div></div>
+</div>
+
+<div class="card">
+  <form id="f">
+    <label>Descrição<input id="d" required placeholder="Ex.: Mercado"></label>
+    <label>Valor (R$)<input id="vl" type="number" step="0.01" min="0.01" required></label>
+    <label>Tipo<select id="tp"><option value="d">Despesa</option><option value="r">Receita</option></select></label>
+    <label>Categoria<select id="ct"></select></label>
+    <label>Data<input id="dt" type="date" required></label>
+    <button id="sv">Adicionar</button>
+    <button type="button" class="g" id="cn" hidden>Cancelar</button>
+  </form>
+</div>
+
+<div class="two">
+  <div class="card"><b>Despesas por categoria</b><div id="cats"></div></div>
+  <div class="card"><b>Lançamentos</b><div class="wrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead><tbody id="lista"></tbody></table></div></div>
+</div>
+<p class="k" style="text-align:center;margin:18px 0 4px">🔒 Seus dados ficam salvos apenas neste aparelho e navegador. Use o botão Backup para guardar uma cópia.</p>
+</main>
+<div class="ov" id="md" hidden>
+  <div class="card md">
+    <div class="hd"><b style="font-size:1.1rem;color:var(--ac)">🐷 Meu cofrinho</b><button class="x" id="fecha" aria-label="Fechar">✕</button></div>
+    <div class="k" style="margin-top:8px">Total guardado</div><div class="v in" id="ctot">R$ 0,00</div>
+    <form id="fc" style="margin:12px 0">
+      <label>Valor guardado (R$)<input id="cv" type="number" step="0.01" min="0.01" required></label>
+      <label>Mês<input id="cm" type="month" required></label>
+      <button>Guardar</button>
+    </form>
+    <div class="wrap"><table><thead><tr><th>Mês</th><th>Valor</th><th></th></tr></thead><tbody id="cl"></tbody></table></div>
+  </div>
+</div>
+
+<script>
+const CATS=["Moradia","Alimentação","Transporte","Saúde","Lazer","Educação","Cartão de crédito","Assinaturas","Estética","Academia","Outros"];
+const CATR=["Salário","Extra","Investimentos","Outros"];
+const $=id=>document.getElementById(id);
+const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+let tx=[],meta=0;
+try{tx=JSON.parse(localStorage.getItem("fin_tx")||"[]");meta=+localStorage.getItem("fin_meta")||0}catch(e){}
+const save=()=>{try{localStorage.setItem("fin_tx",JSON.stringify(tx));localStorage.setItem("fin_meta",meta)}catch(e){}};
+const hoje=new Date().toISOString().slice(0,10);
+$("dt").value=hoje;$("mes").value=hoje.slice(0,7);$("meta").value=meta||"";
+function opts(){const l=$("tp").value==="d"?CATS:CATR;$("ct").innerHTML=l.map(c=>`<option>${c}</option>`).join("")}
+opts();$("tp").onchange=opts;
+let ed_id=null;
+function fim(){ed_id=null;$("sv").textContent="Adicionar";$("cn").hidden=true;$("d").value="";$("vl").value="";$("dt").value=hoje}
+$("cn").onclick=fim;
+$("f").onsubmit=e=>{e.preventDefault();
+  const o={id:ed_id||Date.now(),d:$("d").value.trim(),v:+$("vl").value,t:$("tp").value,c:$("ct").value,dt:$("dt").value};
+  if(ed_id)tx=tx.map(x=>x.id===ed_id?o:x);else tx.push(o);
+  save();$("mes").value=o.dt.slice(0,7);fim();render()};
+function ed(id){const x=tx.find(t=>t.id===id);if(!x)return;
+  ed_id=id;$("tp").value=x.t;opts();$("ct").value=x.c;$("d").value=x.d;$("vl").value=x.v;$("dt").value=x.dt;
+  $("sv").textContent="Salvar alteração";$("cn").hidden=false;$("f").scrollIntoView({behavior:"smooth",block:"center"});$("d").focus()}
+$("mes").onchange=render;
+$("meta").oninput=()=>{meta=+$("meta").value||0;save();render()};
+function del(id){tx=tx.filter(x=>x.id!==id);save();render()}
+function render(){
+  const m=$("mes").value,l=tx.filter(x=>x.dt.startsWith(m)).sort((a,b)=>b.dt.localeCompare(a.dt));
+  const rec=l.filter(x=>x.t==="r").reduce((s,x)=>s+x.v,0),des=l.filter(x=>x.t==="d").reduce((s,x)=>s+x.v,0);
+  $("rec").textContent=brl(rec);$("des").textContent=brl(des);
+  const s=rec-des;$("sal").textContent=brl(s);$("sal").className="v "+(s>=0?"in":"out");
+  $("metaTxt").textContent=meta?`${Math.round(des/meta*100)}% do limite usado`+(des>meta?" ⚠️ acima da meta":""):"";
+  const by={};l.filter(x=>x.t==="d").forEach(x=>by[x.c]=(by[x.c]||0)+x.v);
+  const e=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=e.length?e[0][1]:1;
+  $("cats").innerHTML=e.length?e.map(([c,v])=>`<div class="bar"><span class="n">${c}</span><span class="t"><span class="f" style="display:block;width:${v/mx*100}%"></span></span><span class="m">${brl(v)}</span></div>`).join(""):'<p class="k">Sem despesas neste mês.</p>';
+  $("lista").innerHTML=l.length?l.map(x=>`<tr><td>${x.dt.split("-").reverse().join("/")}</td><td>${x.d.replace(/[<>&]/g,"")}</td><td>${x.c}</td><td class="${x.t==="r"?"in":"out"}">${x.t==="r"?"+":"−"}${brl(x.v)}</td><td><button class="x" onclick="ed(${x.id})" aria-label="Editar">✎</button><button class="x" onclick="del(${x.id})" aria-label="Excluir">✕</button></td></tr>`).join(""):'<tr><td colspan="5" class="k">Nenhum lançamento.</td></tr>';
+}
+let cf=[];
+try{cf=JSON.parse(localStorage.getItem("fin_cofre")||"[]")}catch(e){}
+const saveCf=()=>{try{localStorage.setItem("fin_cofre",JSON.stringify(cf))}catch(e){}};
+$("cofre").onclick=()=>{$("md").hidden=false;$("cm").value=$("mes").value;rcf()};
+$("fecha").onclick=()=>{$("md").hidden=true};
+$("md").onclick=e=>{if(e.target===$("md"))$("md").hidden=true};
+$("fc").onsubmit=e=>{e.preventDefault();cf.push({id:Date.now(),v:+$("cv").value,m:$("cm").value});saveCf();$("cv").value="";rcf()};
+function dc(id){cf=cf.filter(x=>x.id!==id);saveCf();rcf()}
+function rcf(){
+  $("ctot").textContent=brl(cf.reduce((s,x)=>s+x.v,0));
+  const l=[...cf].sort((a,b)=>b.m.localeCompare(a.m)||b.id-a.id);
+  $("cl").innerHTML=l.length?l.map(x=>`<tr><td>${x.m.split("-").reverse().join("/")}</td><td class="in">${brl(x.v)}</td><td><button class="x" onclick="dc(${x.id})" aria-label="Excluir">✕</button></td></tr>`).join(""):'<tr><td colspan="3" class="k">Ainda nada guardado.</td></tr>';
+}
+$("exp").onclick=()=>{const b=new Blob([JSON.stringify({tx,meta,cf},null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="backup-financas-"+hoje+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$("imp").onclick=()=>$("fi").click();
+$("fi").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.tx)||!Array.isArray(d.cf))throw 0;
+    if(!confirm("Substituir os dados atuais pelos do backup?"))return;
+    tx=d.tx;cf=d.cf;meta=+d.meta||0;$("meta").value=meta||"";save();saveCf();render()}catch(_){alert("Arquivo de backup inválido.")}})};
+render();
+</script>
+</body>
+</html>
